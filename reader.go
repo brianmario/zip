@@ -16,9 +16,10 @@ import (
 )
 
 var (
-	ErrFormat    = errors.New("zip: not a valid zip file")
-	ErrAlgorithm = errors.New("zip: unsupported compression algorithm")
-	ErrChecksum  = errors.New("zip: checksum error")
+	ErrFormat     = errors.New("zip: not a valid zip file")
+	ErrAlgorithm  = errors.New("zip: unsupported compression algorithm")
+	ErrChecksum   = errors.New("zip: checksum error")
+	ErrNoPassword = errors.New("zip: needs password to decrypt")
 )
 
 type Reader struct {
@@ -147,6 +148,11 @@ func (f *File) Open() (rc io.ReadCloser, err error) {
 	if f.IsEncrypted() {
 
 		if f.ae == 0 {
+			if f.password == nil {
+				err = ErrNoPassword
+				return
+			}
+
 			if r, err = ZipCryptoDecryptor(rr, f.password()); err != nil {
 				return
 			}
